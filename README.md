@@ -3,8 +3,7 @@
 
 This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/c2c5f3d6-4649-46c2-b10b-7b5ea2d4636a
-
+View your app :- https://jay-shree-ram-store.vercel.app/
 ## Run Locally
 
 **Prerequisites:**  Node.js
