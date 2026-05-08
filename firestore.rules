@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && isEmailVerified() && (
+        request.auth.token.email == 'vedantkasaudhan0@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Blueprints ---
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.company is string && data.company.size() <= 100 &&
+             data.mrp is number && data.mrp >= 0 &&
+             data.offerPrice is number && data.offerPrice >= 0 &&
+             data.stock is number &&
+             data.unit is string &&
+             data.category is string &&
+             (data.get('isFeatured', false) is bool);
+    }
+
+    function isValidOrder(data) {
+      return (data.customerId == 'guest' || isSignedIn()) &&
+             data.customerName is string &&
+             data.items is list && data.items.size() > 0 &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.status == 'placed' &&
+             data.createdAt == request.time &&
+             (data.get('phone', '') is string) &&
+             (data.get('orderNumber', '') is string) &&
+             (data.get('route', '') is string) &&
+             (data.get('address', '') is string) &&
+             (data.get('note', '') is string);
+    }
+
+    function isValidUserProfile(data) {
+      return data.uid is string && data.uid == request.auth.uid &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email == request.auth.token.email &&
+             data.role in ['customer', 'admin'];
+    }
+
+    // --- Collections ---
+
+    // Products
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(productId) && isValidProduct(incoming()); 
+      allow update: if (isAdmin() && isValidProduct(incoming())) || 
+                    (incoming().diff(existing()).affectedKeys().hasOnly(['stock']) && 
+                     incoming().stock < existing().stock);
+      allow delete: if isAdmin();
+    }
+
+    // Purchase Costs (Admin Only)
+    match /costs/{productId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      // Allow reading specific order if you own it OR if you are tracking by orderNumber
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid) || 
+                  (resource.data.orderNumber != null); // Tracking accessibility
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid) || 
+                  (resource.data.orderNumber != null);
+      allow create: if isValidOrder(incoming());
+      
+      allow update: if (
+        // Admin can update status and metadata
+        (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'route', 'address', 'note', 'updatedAt'])) ||
+        // User can cancel their own placed order
+        (isSignedIn() && resource.data.customerId == request.auth.uid && 
+         existing().status == 'placed' && 
+         incoming().status == 'cancelled' && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isEmailVerified() && userId == request.auth.uid && isValidUserProfile(incoming());
+      allow update: if isSignedIn() && userId == request.auth.uid && (
+        // Prevent self-assigned rules and immutable fields
+        incoming().role == existing().role &&
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        incoming().diff(existing()).affectedKeys().hasAny(['name', 'address', 'phone', 'route'])
+      );
+    }
+  }
+}
