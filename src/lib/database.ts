@@ -72,9 +72,11 @@ export let lastDbError: string | null = null;
 export let lastDbErrorCode: string | null = null;
 export let lastDbAttemptAt: string | null = null;
 export let lastDbConnectedAt: string | null = null;
+export let dbReadyState: number = mongoose.connection.readyState;
 
 mongoose.connection.on('disconnected', () => {
   dbConnected = false;
+  dbReadyState = mongoose.connection.readyState;
   console.warn('⚠️ MongoDB disconnected. Attempting to reconnect...');
   connectDB().catch(() => {
     console.warn('⚠️ MongoDB reconnection attempt failed.');
@@ -83,6 +85,7 @@ mongoose.connection.on('disconnected', () => {
 
 mongoose.connection.on('reconnected', () => {
   dbConnected = true;
+  dbReadyState = mongoose.connection.readyState;
   console.log('✅ MongoDB reconnected successfully');
 });
 
@@ -114,12 +117,21 @@ export const connectDB = async () => {
       return;
     }
 
-    await mongoose.connect(mongoURI, {
+    const timeoutMs = 15000;
+    const connectPromise = mongoose.connect(mongoURI, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 20000,
     });
 
+    await Promise.race([
+      connectPromise,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Mongo connection timeout after ${timeoutMs}ms`)), timeoutMs);
+      }),
+    ]);
+
     dbConnected = true;
+    dbReadyState = mongoose.connection.readyState;
     lastDbError = null;
     lastDbErrorCode = null;
     lastDbConnectedAt = new Date().toISOString();
@@ -138,6 +150,7 @@ export const connectDB = async () => {
     );
 
     dbConnected = false;
+    dbReadyState = mongoose.connection.readyState;
     lastDbError = err?.message || String(error);
     lastDbErrorCode = err?.code || err?.name || null;
   } finally {

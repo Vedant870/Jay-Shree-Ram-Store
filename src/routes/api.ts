@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import express from 'express';
-import { User, Product, Order, Admin, dbConnected, lastDbError, lastDbErrorCode, lastDbAttemptAt, lastDbConnectedAt } from '../lib/database.js';
+import { User, Product, Order, Admin, dbConnected, lastDbError, lastDbErrorCode, lastDbAttemptAt, lastDbConnectedAt, dbReadyState } from '../lib/database.js';
 import { authenticate, requireAdmin, hashPassword, verifyPassword, generateToken, verifyToken } from '../lib/auth.js';
 import { Product as ProductType, Order as OrderType, UserProfile } from '../types.js';
 import { MOCK_PRODUCTS as SHARED_MOCK_PRODUCTS } from '../mockData.js';
@@ -31,6 +31,7 @@ router.get('/health', (req, res) => {
     env: process.env.NODE_ENV || 'development',
     hasMongoUri,
     mongoUriLooksSrv,
+    dbReadyState,
     lastDbAttemptAt,
     lastDbConnectedAt,
     lastDbErrorCode,
