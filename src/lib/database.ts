@@ -66,6 +66,10 @@ interface IAdmin {
 }
 
 export let dbConnected = false;
+export let lastDbError: string | null = null;
+export let lastDbErrorCode: string | null = null;
+export let lastDbAttemptAt: string | null = null;
+export let lastDbConnectedAt: string | null = null;
 
 mongoose.connection.on('disconnected', () => {
   dbConnected = false;
@@ -84,6 +88,8 @@ export const connectDB = async () => {
 
   try {
 
+    lastDbAttemptAt = new Date().toISOString();
+
     if (dbConnected) return;
 
     const mongoURI =
@@ -95,12 +101,18 @@ export const connectDB = async () => {
         '⚠️ MONGODB_URI not set. Running in mock mode.'
       );
 
+      lastDbError = 'MONGODB_URI not set';
+      lastDbErrorCode = 'ENV_MISSING';
+
       return;
     }
 
     await mongoose.connect(mongoURI);
 
     dbConnected = true;
+    lastDbError = null;
+    lastDbErrorCode = null;
+    lastDbConnectedAt = new Date().toISOString();
 
     console.log(
       '✅ MongoDB connected successfully'
@@ -108,12 +120,16 @@ export const connectDB = async () => {
 
   } catch (error) {
 
+    const err = error as any;
+
     console.warn(
       '⚠️ MongoDB connection failed:',
       error
     );
 
     dbConnected = false;
+    lastDbError = err?.message || String(error);
+    lastDbErrorCode = err?.code || err?.name || null;
   }
 };
 

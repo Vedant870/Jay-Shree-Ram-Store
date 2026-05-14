@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import express from 'express';
-import { User, Product, Order, Admin, dbConnected } from '../lib/database.js';
+import { User, Product, Order, Admin, dbConnected, lastDbError, lastDbErrorCode, lastDbAttemptAt, lastDbConnectedAt } from '../lib/database.js';
 import { authenticate, requireAdmin, hashPassword, verifyPassword, generateToken, verifyToken } from '../lib/auth.js';
 import { Product as ProductType, Order as OrderType, UserProfile } from '../types.js';
 import { MOCK_PRODUCTS as SHARED_MOCK_PRODUCTS } from '../mockData.js';
@@ -21,11 +21,20 @@ const respondDatabaseUnavailable = (res: express.Response) => {
 };
 
 router.get('/health', (req, res) => {
+  const hasMongoUri = Boolean(process.env.MONGODB_URI);
+  const mongoUriLooksSrv = (process.env.MONGODB_URI || '').startsWith('mongodb+srv://');
+
   res.status(200).json({
     ok: true,
     dbConnected,
     mockFallback: canUseMockFallback(),
     env: process.env.NODE_ENV || 'development',
+    hasMongoUri,
+    mongoUriLooksSrv,
+    lastDbAttemptAt,
+    lastDbConnectedAt,
+    lastDbErrorCode,
+    lastDbError,
   });
 });
 
