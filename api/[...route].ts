@@ -18,6 +18,8 @@ connectDB().catch(() => {
   console.warn('MongoDB connection failed during Vercel function bootstrap.');
 });
 
-export default function handler(req: express.Request, res: express.Response) {
+export default async function handler(req: express.Request, res: express.Response) {
+  // Ensure each serverless invocation can retry DB connection
+  await connectDB();
   return app(req, res);
 }
