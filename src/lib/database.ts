@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+let dbConnectPromise: Promise<void> | null = null;
+
 // ================= INTERFACES =================
 
 interface IUser {
@@ -86,6 +88,11 @@ mongoose.connection.on('reconnected', () => {
 
 export const connectDB = async () => {
 
+  if (dbConnected) return;
+  if (dbConnectPromise) return dbConnectPromise;
+
+  dbConnectPromise = (async () => {
+
   try {
 
     lastDbAttemptAt = new Date().toISOString();
@@ -133,7 +140,12 @@ export const connectDB = async () => {
     dbConnected = false;
     lastDbError = err?.message || String(error);
     lastDbErrorCode = err?.code || err?.name || null;
+  } finally {
+    dbConnectPromise = null;
   }
+  })();
+
+  return dbConnectPromise;
 };
 
 
