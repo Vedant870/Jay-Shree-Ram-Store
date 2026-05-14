@@ -91,6 +91,9 @@ mongoose.connection.on('reconnected', () => {
 
 export const connectDB = async () => {
 
+  dbReadyState = mongoose.connection.readyState;
+  dbConnected = dbReadyState === 1;
+
   if (dbConnected) return;
   if (dbConnectPromise) return dbConnectPromise;
 
@@ -130,8 +133,13 @@ export const connectDB = async () => {
       }),
     ]);
 
-    dbConnected = true;
     dbReadyState = mongoose.connection.readyState;
+    dbConnected = dbReadyState === 1;
+
+    if (!dbConnected) {
+      throw new Error(`MongoDB connect returned but readyState=${dbReadyState}`);
+    }
+
     lastDbError = null;
     lastDbErrorCode = null;
     lastDbConnectedAt = new Date().toISOString();
