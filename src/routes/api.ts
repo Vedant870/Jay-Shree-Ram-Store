@@ -7,11 +7,27 @@ import { MOCK_PRODUCTS as SHARED_MOCK_PRODUCTS } from '../mockData.js';
 
 const router = express.Router();
 const buildOrderNumber = () => Date.now().toString().slice(-6);
-const canUseMockFallback = () => true;
+const canUseMockFallback = () => {
+  const envOverride = process.env.ALLOW_MOCK_FALLBACK;
+  if (typeof envOverride === 'string') {
+    return envOverride.toLowerCase() === 'true';
+  }
+
+  return process.env.NODE_ENV !== 'production';
+};
 
 const respondDatabaseUnavailable = (res: express.Response) => {
   return res.status(503).json({ error: 'Database temporarily unavailable. Please retry in a moment.' });
 };
+
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    ok: true,
+    dbConnected,
+    mockFallback: canUseMockFallback(),
+    env: process.env.NODE_ENV || 'development',
+  });
+});
 
 const aggregateItemQuantities = (items: any[]) => {
   const quantitiesByProductId: Record<string, number> = {};

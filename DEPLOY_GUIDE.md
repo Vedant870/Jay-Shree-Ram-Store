@@ -19,6 +19,12 @@ This app is built as a **Full-Stack Vite + Express** application. For Vercel dep
     - Add your `GEMINI_API_KEY`.
     - Add all Firebase public keys (e.g., `VITE_FIREBASE_API_KEY`).
     - Keep `VITE_API_BASE_URL` empty when frontend+API are on same Vercel project.
+    - Set `ALLOW_MOCK_FALLBACK=false` in Production to disable mock data when DB is unavailable.
+
+5. **Sanity URLs after deploy:**
+   - `https://<your-domain>/api/health`
+   - `https://<your-domain>/api/products`
+   - `https://<your-domain>/catalog`
 
 ## Netlify Deployment
 1. **Import:** Connect your GitHub account and select the repo.
