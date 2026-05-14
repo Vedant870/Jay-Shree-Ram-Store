@@ -121,17 +121,46 @@ export const connectDB = async () => {
     }
 
     const timeoutMs = 15000;
-    const connectPromise = mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 20000,
-    });
 
-    await Promise.race([
-      connectPromise,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Mongo connection timeout after ${timeoutMs}ms`)), timeoutMs);
-      }),
-    ]);
+    const waitUntilConnected = () =>
+      new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error(`Mongo connection timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+
+        const onConnected = () => {
+          cleanup();
+          resolve();
+        };
+
+        const onError = (error: any) => {
+          cleanup();
+          reject(error instanceof Error ? error : new Error(String(error)));
+        };
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          mongoose.connection.off('connected', onConnected);
+          mongoose.connection.off('error', onError);
+          mongoose.connection.off('disconnected', onError);
+        };
+
+        mongoose.connection.on('connected', onConnected);
+        mongoose.connection.on('error', onError);
+        mongoose.connection.on('disconnected', onError);
+      });
+
+    if (mongoose.connection.readyState === 0) {
+      const connectPromise = mongoose.connect(mongoURI, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 20000,
+      });
+
+      await Promise.race([connectPromise, waitUntilConnected()]);
+    } else if (mongoose.connection.readyState === 2) {
+      await waitUntilConnected();
+    }
 
     dbReadyState = mongoose.connection.readyState;
     dbConnected = dbReadyState === 1;
