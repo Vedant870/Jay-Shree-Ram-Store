@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Inventory items available for purchase",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "mrp": { "type": "number" },
+        "offerPrice": { "type": "number", "description": "Price sold to customer" },
+        "stock": { "type": "number" },
+        "unit": { "type": "string" },
+        "minQty": { "type": "number", "description": "Minimum quantity to order" },
+        "orderStep": { "type": "number", "description": "Quantity increment step (e.g. 0.5 per step)" },
+        "category": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "company", "mrp", "offerPrice", "stock", "unit", "category"]
+    },
+    "ProductCost": {
+       "title": "Product Cost",
+       "description": "Sensitive cost data only for admin",
+       "properties": {
+         "buyPrice": { "type": "number" }
+       }
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase records",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "processing", "out-for-delivery", "delivered", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "route": { "type": "string" }
+      },
+      "required": ["customerId", "customerName", "items", "totalAmount", "status", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account information and roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin"] },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "route": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    }
+  },
+  "firestore": {
+    "products": {
+      "schema": "Product",
+      "description": "Collection of all products"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Collection of all orders"
+    },
+    "users": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles"
+    }
+  }
+}

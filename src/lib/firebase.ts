@@ -1,7 +1,3 @@
-﻿export const db = null;
-export const auth = null;
-export const storage = null;
-
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -12,6 +8,6 @@ export enum OperationType {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  console.error('Firestore Error:', error, { operationType, path });
-  return;
+  console.error('Legacy Firebase error handler invoked:', error, { operationType, path });
+  throw error instanceof Error ? error : new Error(String(error));
 }

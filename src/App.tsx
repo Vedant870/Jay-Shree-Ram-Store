@@ -4,7 +4,6 @@ import { ShoppingCart, User, Menu, X, House, Package, LayoutDashboard, MessageSq
 import { motion, AnimatePresence } from 'motion/react';
 
 import Catalog from './pages/Catalog.tsx';
-import AdminDashboard from './pages/AdminDashboard.tsx';
 import Auth from './pages/Auth.tsx';
 import Orders from './pages/Orders.tsx';
 import Cart from './pages/Cart.tsx';
@@ -19,7 +18,6 @@ import AnalyticsPage from './pages/admin/analytics/AnalyticsPage.tsx';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext.tsx';
 import { CartProvider, useCart } from './contexts/CartContext.tsx';
 import { MOCK_PRODUCTS } from './mockData.ts';
-import AdminProducts from './pages/AdminProducts';
 
 const Home = () => {
   const { t } = useLanguage();

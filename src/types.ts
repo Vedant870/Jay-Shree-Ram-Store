@@ -17,12 +17,16 @@ export interface Product {
 
 export interface Order {
   id: string;
-  customerId: string;
+  customerId?: string;
   customerName: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'out-for-delivery' | 'delivered' | 'cancelled';
+  status: 'placed' | 'packed' | 'out-for-delivery' | 'delivered' | 'cancelled';
   createdAt: any;
+  updatedAt?: any;
+  orderNumber?: string;
+  phone?: string;
+  address?: string;
   route?: string;
 }
 

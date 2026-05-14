@@ -251,27 +251,24 @@ class ApiClient {
   }
 
   async getProfitLossData() {
-    return this.request('/analytics/profit-loss');
+    return this.request('/analytics/overview');
   }
 
   async getInventoryAnalytics() {
-    return this.request('/analytics/inventory');
+    return this.request('/analytics/overview');
   }
 
   async getSalesTrends() {
-    return this.request('/analytics/sales-trends');
+    return this.request('/analytics/overview');
   }
 
   // User methods
   async getProfile() {
-    return this.request('/users/profile');
+    return this.request('/auth/me');
   }
 
   async updateProfile(userData: any) {
-    return this.request('/users/profile', {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
+    throw new Error('Profile update endpoint is not implemented in backend yet');
   }
 }
 

@@ -15,7 +15,7 @@ export default function Auth() {
     email: '',
     password: '',
     phone: '',
-    address: ''
+    address: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,13 +28,12 @@ export default function Auth() {
       if (isLogin) {
         response = await apiClient.login({
           email: formData.email,
-          password: formData.password
+          password: formData.password,
         });
       } else {
         response = await apiClient.register(formData);
       }
 
-      // Navigate based on user role
       const role = response.admin?.role || response.user?.role;
       const isAdmin = role === 'super_admin' || role === 'admin';
       navigate(isAdmin ? '/admin' : '/catalog');
@@ -48,7 +47,7 @@ export default function Auth() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -71,8 +70,7 @@ export default function Auth() {
           <p className="text-slate-500 text-sm mb-12 leading-relaxed px-10">
             {isLogin
               ? 'Secure access for authorized retail partners of Jay Shree Ram Distributors.'
-              : 'Register as a new business partner to access our wholesale catalog.'
-            }
+              : 'Register as a new business partner to access our wholesale catalog.'}
           </p>
 
           {error && (
@@ -122,7 +120,7 @@ export default function Auth() {
               <div className="relative">
                 <input
                   required
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-12 pr-12 text-sm focus:outline-none focus:ring-4 focus:ring-saffron/10 transition-all font-medium"
                   placeholder="Enter your password"
@@ -179,7 +177,7 @@ export default function Auth() {
               disabled={loading}
               className="group w-full flex items-center justify-center gap-4 bg-saffron text-white py-4 rounded-full font-bold hover:bg-orange-500 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
-              {loading ? 'PROCESSING...' : (isLogin ? 'SIGN IN' : 'REGISTER')}
+              {loading ? 'PROCESSING...' : isLogin ? 'SIGN IN' : 'REGISTER'}
             </button>
           </form>
 
