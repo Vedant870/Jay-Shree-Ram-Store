@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import express from 'express';
-import { User, Product, Order, Admin, dbConnected, lastDbError, lastDbErrorCode, lastDbAttemptAt, lastDbConnectedAt, dbReadyState } from '../lib/database.js';
+import { User, Product, Order, Admin, dbConnected, lastDbError, lastDbErrorCode, lastDbAttemptAt, lastDbConnectedAt, dbReadyState, sanitizeMongoUri } from '../lib/database.js';
 import { authenticate, requireAdmin, hashPassword, verifyPassword, generateToken, verifyToken } from '../lib/auth.js';
 import { Product as ProductType, Order as OrderType, UserProfile } from '../types.js';
 import { MOCK_PRODUCTS as SHARED_MOCK_PRODUCTS } from '../mockData.js';
@@ -21,8 +21,27 @@ const respondDatabaseUnavailable = (res: express.Response) => {
 };
 
 router.get('/health', (req, res) => {
-  const hasMongoUri = Boolean(process.env.MONGODB_URI);
-  const mongoUriLooksSrv = (process.env.MONGODB_URI || '').startsWith('mongodb+srv://');
+  const rawMongoUri = process.env.MONGODB_URI || '';
+  const hasMongoUri = Boolean(rawMongoUri);
+  const mongoUriLooksSrv = rawMongoUri.startsWith('mongodb+srv://');
+
+  let mongoUriHost: string | null = null;
+  let mongoUriDbName: string | null = null;
+  let mongoUriParams: Record<string, string> | null = null;
+
+  try {
+    if (rawMongoUri) {
+      const parsed = new URL(rawMongoUri);
+      mongoUriHost = parsed.host || null;
+      mongoUriDbName = parsed.pathname?.replace(/^\//, '') || null;
+      mongoUriParams = {};
+      parsed.searchParams.forEach((value, key) => {
+        mongoUriParams![key] = value;
+      });
+    }
+  } catch {
+    mongoUriHost = 'invalid-uri-format';
+  }
 
   res.status(200).json({
     ok: true,
@@ -31,6 +50,10 @@ router.get('/health', (req, res) => {
     env: process.env.NODE_ENV || 'development',
     hasMongoUri,
     mongoUriLooksSrv,
+    mongoUriSanitized: rawMongoUri ? sanitizeMongoUri(rawMongoUri) : null,
+    mongoUriHost,
+    mongoUriDbName,
+    mongoUriParams,
     dbReadyState,
     lastDbAttemptAt,
     lastDbConnectedAt,

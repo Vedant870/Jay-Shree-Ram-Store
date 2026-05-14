@@ -161,6 +161,17 @@ export const connectDB = async () => {
   return dbConnectPromise;
 };
 
+export const sanitizeMongoUri = (uri: string) => {
+  try {
+    const parsed = new URL(uri);
+    if (parsed.password) parsed.password = '***';
+    if (parsed.username) parsed.username = parsed.username.slice(0, 2) + '***';
+    return parsed.toString();
+  } catch {
+    return 'invalid-uri-format';
+  }
+};
+
 
 
 // ================= USER SCHEMA =================
