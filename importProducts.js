@@ -1,8 +1,15 @@
 
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-const MONGODB_URI =
-"mongodb+srv://vedantkasaudhan87_db_user:cXP4h660Br4avAhx@cluster0.fy2uzd6.mongodb.net/?appName=Cluster0";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI is required. Add it in .env.local or environment variables.");
+}
 
 const ProductSchema = new mongoose.Schema({}, { strict: false });
 

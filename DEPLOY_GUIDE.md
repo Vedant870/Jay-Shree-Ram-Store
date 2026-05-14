@@ -1,19 +1,24 @@
 # JSR Order App Deployment Guide
 
 ## Architecture Choice
-This app is built as a **Full-Stack Vite + Express** application for local dev, but is configured to deploy as a **Static Site (SPA)** to platforms like Vercel or Netlify for maximum speed and zero cost.
+This app is built as a **Full-Stack Vite + Express** application. For Vercel deployment:
+- frontend is served from `dist`
+- backend APIs are served through serverless handler [`api/[...route].ts`](api/[...route].ts)
 
 ## Vercel Deployment (Recommended)
 1. **GitHub Connection:** Push this code to a GitHub repo.
 2. **Project Setup:** Import the project in Vercel.
 3. **Build Settings:**
-   - Framework Preset: `Vite`
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
+    - Framework Preset: `Vite`
+    - Build Command: `npm run build`
+    - Output Directory: `dist`
 4. **Environment Variables:**
-   - Go to Project Settings > Environment Variables.
-   - Add your `GEMINI_API_KEY`.
-   - Add all your Firebase keys (e.g., `VITE_FIREBASE_API_KEY`).
+    - Go to Project Settings > Environment Variables.
+    - Add `MONGODB_URI`.
+    - Add `JWT_SECRET`.
+    - Add your `GEMINI_API_KEY`.
+    - Add all Firebase public keys (e.g., `VITE_FIREBASE_API_KEY`).
+    - Keep `VITE_API_BASE_URL` empty when frontend+API are on same Vercel project.
 
 ## Netlify Deployment
 1. **Import:** Connect your GitHub account and select the repo.
