@@ -107,7 +107,10 @@ export const connectDB = async () => {
       return;
     }
 
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 20000,
+    });
 
     dbConnected = true;
     lastDbError = null;
